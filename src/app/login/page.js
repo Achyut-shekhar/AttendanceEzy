@@ -14,22 +14,28 @@ export default function LoginPage() {
     setError("");
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(), // 👈 trim spaces just in case
+      email,
       password,
     });
-
-    console.log("LOGIN RESPONSE:", data, error); // 👈 see exact response in console
 
     if (error) {
       setError(error.message);
       return;
     }
 
-    // check if session is returned
-    if (data?.user) {
-      router.push("/dashboard");
-    } else {
-      setError("Login failed: no session returned.");
+    if (data.user) {
+      // Get user role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profile?.role === "faculty") {
+        router.push("/faculty");
+      } else {
+        router.push("/student");
+      }
     }
   };
 
